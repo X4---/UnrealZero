@@ -38,6 +38,9 @@ public:
 	UPROPERTY(EditAnywhere, Category = Camera)
 	float MinCameraAngle;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera)
+	bool bToControllCamera;
+
 protected:
 
 	/** Resets HMD orientation in VR. */
@@ -66,6 +69,14 @@ protected:
 
 	/** Handler for when a touch input stops. */
 	void TouchStopped(ETouchIndex::Type FingerIndex, FVector Location);
+
+	void ControlLookUp(float val);
+
+	void ControlTurn(float val);
+
+	void ToControllCamera();
+
+	void ToEndControllCamera();
 
 protected:
 	// APawn interface

@@ -63,9 +63,9 @@ void AZeroCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInpu
 	// We have 2 versions of the rotation bindings to handle different kinds of devices differently
 	// "turn" handles devices that provide an absolute delta, such as a mouse.
 	// "turnrate" is for devices that we choose to treat as a rate of change, such as an analog joystick
-	PlayerInputComponent->BindAxis("Turn", this, &APawn::AddControllerYawInput);
+	PlayerInputComponent->BindAxis("Turn", this, &AZeroCharacter::ControlTurn);
 	PlayerInputComponent->BindAxis("TurnRate", this, &AZeroCharacter::TurnAtRate);
-	PlayerInputComponent->BindAxis("LookUp", this, &APawn::AddControllerPitchInput);
+	PlayerInputComponent->BindAxis("LookUp", this, &AZeroCharacter::ControlLookUp);
 	PlayerInputComponent->BindAxis("LookUpRate", this, &AZeroCharacter::LookUpAtRate);
 
 	// handle touch devices
@@ -74,8 +74,37 @@ void AZeroCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInpu
 
 	// VR headset functionality
 	PlayerInputComponent->BindAction("ResetVR", IE_Pressed, this, &AZeroCharacter::OnResetVR);
+
+	// Camera
+	PlayerInputComponent->BindAction("ToControlCamera", IE_Pressed, this, &AZeroCharacter::ToControllCamera);
+	PlayerInputComponent->BindAction("ToControlCamera", IE_Released, this, &AZeroCharacter::ToEndControllCamera);
 }
 
+void AZeroCharacter::ToControllCamera()
+{
+	bToControllCamera = true;
+}
+
+void AZeroCharacter::ToEndControllCamera()
+{
+	bToControllCamera = false;
+}
+
+void AZeroCharacter::ControlLookUp(float val)
+{
+	if (bToControllCamera)
+	{
+		AddControllerPitchInput(val);
+	}
+}
+
+void AZeroCharacter::ControlTurn(float val)
+{
+	if (bToControllCamera)
+	{
+		AddControllerYawInput(val);
+	}
+}
 
 void AZeroCharacter::OnResetVR()
 {
@@ -94,14 +123,20 @@ void AZeroCharacter::TouchStopped(ETouchIndex::Type FingerIndex, FVector Locatio
 
 void AZeroCharacter::TurnAtRate(float Rate)
 {
-	// calculate delta for this frame from the rate information
-	AddControllerYawInput(Rate * BaseTurnRate * GetWorld()->GetDeltaSeconds());
+	if (bToControllCamera)
+	{
+		// calculate delta for this frame from the rate information
+		AddControllerYawInput(Rate * BaseTurnRate * GetWorld()->GetDeltaSeconds());
+	}
 }
 
 void AZeroCharacter::LookUpAtRate(float Rate)
 {
-	// calculate delta for this frame from the rate information
-	AddControllerPitchInput(Rate * BaseLookUpRate * GetWorld()->GetDeltaSeconds());
+	if (bToControllCamera)
+	{
+		// calculate delta for this frame from the rate information
+		AddControllerPitchInput(Rate * BaseLookUpRate * GetWorld()->GetDeltaSeconds());
+	}
 }
 
 void AZeroCharacter::MoveForward(float Value)
